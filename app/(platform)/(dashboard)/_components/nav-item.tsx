@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Activity, CreditCard, Layout, Settings, ClipboardCheck, Users, ListTodo } from "lucide-react";
+import { Layout, ClipboardCheck, Users, ListTodo } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -47,21 +47,6 @@ export const NavItem = ({ isExpanded, isActive, organization, onExpand }: NavIte
       label: "Penilaian Anggota",
       icon: <ClipboardCheck className="h-4 w-4 mr-2" />,
       href: `/organization/${organization.id}/penilaian`,
-    },
-    {
-      label: "Activity",
-      icon: <Activity className="h-4 w-4 mr-2" />,
-      href: `/organization/${organization.id}/activity`,
-    },
-    {
-      label: "Settings",
-      icon: <Settings className="h-4 w-4 mr-2" />,
-      href: `/organization/${organization.id}/settings`,
-    },
-    {
-      label: "Billing",
-      icon: <CreditCard className="h-4 w-4 mr-2" />,
-      href: `/organization/${organization.id}/billing`,
     },
   ];
 

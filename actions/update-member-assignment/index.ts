@@ -2,12 +2,13 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { MemberRole, MemberStatus } from "@prisma/client";
 
 interface UpdateMemberAssignmentParams {
   memberId: string;
-  role: string;
+  role: MemberRole;
   divisionId: string;
-  status: string;
+  status: MemberStatus;
 }
 
 export async function updateMemberAssignment(params: UpdateMemberAssignmentParams) {
