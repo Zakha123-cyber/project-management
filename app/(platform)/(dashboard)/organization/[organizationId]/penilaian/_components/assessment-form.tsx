@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 import { AssessmentFormDialog } from "./assessment-form-dialog";
@@ -21,26 +15,21 @@ interface AssessmentFormProps {
   activePeriod: any;
 }
 
-export const AssessmentForm = ({
-  member,
-  activePeriod,
-}: AssessmentFormProps) => {
+export const AssessmentForm = ({ member, activePeriod }: AssessmentFormProps) => {
   const [unassessedMembers, setUnassessedMembers] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showDialog, setShowDialog] = useState(false);
 
-  const fetchUnassessedMembers = async () => {
+  const fetchUnassessedMembers = useCallback(async () => {
     if (!activePeriod) {
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch(
-        `/api/assessment/${activePeriod.id}/unassessed-members`
-      );
+      const response = await fetch(`/api/assessment/${activePeriod.id}/unassessed-members`);
       const data = await response.json();
       setUnassessedMembers(data.members);
       setStats({
@@ -53,11 +42,11 @@ export const AssessmentForm = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [activePeriod]);
 
   useEffect(() => {
     fetchUnassessedMembers();
-  }, [activePeriod]);
+  }, [fetchUnassessedMembers]);
 
   const handleAssess = (memberToAssess: any) => {
     setSelectedMember(memberToAssess);
@@ -75,13 +64,8 @@ export const AssessmentForm = ({
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <AlertCircle className="w-12 h-12 text-orange-500 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            Tidak Ada Periode Aktif
-          </h3>
-          <p className="text-sm text-neutral-600 text-center max-w-md">
-            Saat ini tidak ada periode penilaian yang aktif. Silakan hubungi
-            admin untuk membuka periode penilaian.
-          </p>
+          <h3 className="text-lg font-semibold mb-2">Tidak Ada Periode Aktif</h3>
+          <p className="text-sm text-neutral-600 text-center max-w-md">Saat ini tidak ada periode penilaian yang aktif. Silakan hubungi admin untuk membuka periode penilaian.</p>
         </CardContent>
       </Card>
     );
@@ -101,28 +85,20 @@ export const AssessmentForm = ({
       <Card>
         <CardHeader>
           <CardTitle>Progress Penilaian Anda</CardTitle>
-          <CardDescription>
-            Periode: {activePeriod.name}
-          </CardDescription>
+          <CardDescription>Periode: {activePeriod.name}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {stats?.total || 0}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.total || 0}</div>
               <div className="text-sm text-neutral-600">Total Anggota</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {stats?.assessed || 0}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{stats?.assessed || 0}</div>
               <div className="text-sm text-neutral-600">Sudah Dinilai</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
-                {stats?.remaining || 0}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.remaining || 0}</div>
               <div className="text-sm text-neutral-600">Belum Dinilai</div>
             </div>
           </div>
@@ -131,21 +107,14 @@ export const AssessmentForm = ({
 
       {/* Members List */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">
-          Anggota yang Belum Dinilai
-        </h3>
+        <h3 className="text-lg font-semibold mb-4">Anggota yang Belum Dinilai</h3>
 
         {unassessedMembers.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CheckCircle2 className="w-12 h-12 text-green-500 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                Semua Anggota Sudah Dinilai!
-              </h3>
-              <p className="text-sm text-neutral-600 text-center max-w-md">
-                Anda sudah menyelesaikan penilaian untuk semua anggota di
-                periode ini. Terima kasih atas partisipasinya!
-              </p>
+              <h3 className="text-lg font-semibold mb-2">Semua Anggota Sudah Dinilai!</h3>
+              <p className="text-sm text-neutral-600 text-center max-w-md">Anda sudah menyelesaikan penilaian untuk semua anggota di periode ini. Terima kasih atas partisipasinya!</p>
             </CardContent>
           </Card>
         ) : (
@@ -173,10 +142,7 @@ export const AssessmentForm = ({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button
-                    className="w-full"
-                    onClick={() => handleAssess(memberToAssess)}
-                  >
+                  <Button className="w-full" onClick={() => handleAssess(memberToAssess)}>
                     Berikan Penilaian
                   </Button>
                 </CardContent>

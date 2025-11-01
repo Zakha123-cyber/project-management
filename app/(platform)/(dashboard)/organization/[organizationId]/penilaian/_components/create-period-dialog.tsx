@@ -81,7 +81,7 @@ export const CreatePeriodDialog = ({ isOpen, onClose, onSuccess }: CreatePeriodD
             </Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Contoh: Periode Oktober 2025" disabled={isLoading} required />
             <FormErrors id="name" errors={fieldErrors} />
-            <p className="text-xs text-neutral-500">Nama periode untuk identifikasi (contoh: "Oktober 2025", "Semester 1 2025")</p>
+            <p className="text-xs text-neutral-500">Nama periode untuk identifikasi (contoh: &ldquo;Oktober 2025&rdquo;, &ldquo;Semester 1 2025&rdquo;)</p>
           </div>
 
           {/* Start Date */}

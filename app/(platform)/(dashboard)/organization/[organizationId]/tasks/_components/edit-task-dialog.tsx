@@ -180,7 +180,7 @@ export const EditTaskDialog = ({ task, member, isOpen, onClose }: EditTaskDialog
                 Divisi: <strong>{task.division.name}</strong> (tidak bisa diubah)
               </li>
               <li>
-                Assignment: <strong>{task.assignedToName || "Belum di-assign"}</strong> - gunakan menu "Assign" untuk mengubah
+                Assignment: <strong>{task.assignedToName || "Belum di-assign"}</strong> - gunakan menu &ldquo;Assign&rdquo; untuk mengubah
               </li>
               <li>
                 Status:{" "}
@@ -190,7 +190,7 @@ export const EditTaskDialog = ({ task, member, isOpen, onClose }: EditTaskDialog
                   {task.status === "COMPLETED" && "Selesai"}
                   {task.status === "OVERDUE" && "Terlambat"}
                 </strong>{" "}
-                - gunakan "Update Status" untuk mengubah
+                - gunakan &ldquo;Update Status&rdquo; untuk mengubah
               </li>
             </ul>
           </div>
