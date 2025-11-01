@@ -35,21 +35,6 @@ const divisions = [
   },
 ];
 
-const divisionQuestions = [
-  { divisionName: "BPI (Badan Pengurus Inti)", questionNumber: 1, questionText: "Kepemimpinan dan pengambilan keputusan" },
-  { divisionName: "BPI (Badan Pengurus Inti)", questionNumber: 2, questionText: "Koordinasi dan manajemen organisasi" },
-  { divisionName: "Divisi Sosialisasi", questionNumber: 1, questionText: "Kreativitas dalam pembuatan konten" },
-  { divisionName: "Divisi Sosialisasi", questionNumber: 2, questionText: "Efektivitas strategi publikasi" },
-  { divisionName: "Divisi Logbook", questionNumber: 1, questionText: "Kelengkapan dokumentasi kegiatan" },
-  { divisionName: "Divisi Logbook", questionNumber: 2, questionText: "Kerapihan dan detail dalam pencatatan" },
-  { divisionName: "Divisi Pemrograman", questionNumber: 1, questionText: "Kualitas kode dan sistem yang dikembangkan" },
-  { divisionName: "Divisi Pemrograman", questionNumber: 2, questionText: "Kemampuan problem solving teknis" },
-  { divisionName: "Divisi Pembangunan", questionNumber: 1, questionText: "Perencanaan dan eksekusi proyek fisik" },
-  { divisionName: "Divisi Pembangunan", questionNumber: 2, questionText: "Pengelolaan sumber daya dan anggaran" },
-  { divisionName: "Divisi PDD", questionNumber: 1, questionText: "Efektivitas program pengembangan SDM" },
-  { divisionName: "Divisi PDD", questionNumber: 2, questionText: "Kemampuan memotivasi dan membimbing" },
-];
-
 async function main() {
   console.log("🌱 Seeding database...");
 
@@ -58,7 +43,6 @@ async function main() {
   await prisma.member.deleteMany();
   await prisma.assessment.deleteMany();
   await prisma.task.deleteMany();
-  await prisma.divisionQuestion.deleteMany();
   await prisma.assessmentPeriod.deleteMany();
   await prisma.division.deleteMany();
   console.log("✅ Cleared existing data");
@@ -67,11 +51,6 @@ async function main() {
   console.log("📁 Creating divisions...");
   const createdDivisions = await Promise.all(divisions.map((division) => prisma.division.create({ data: division })));
   console.log(`✅ Created ${createdDivisions.length} divisions`);
-
-  // Seed Division Questions
-  console.log("❓ Creating division-specific questions...");
-  await Promise.all(divisionQuestions.map((question) => prisma.divisionQuestion.create({ data: question })));
-  console.log(`✅ Created ${divisionQuestions.length} questions`);
 
   // Seed Tasks
   console.log("📝 Creating tasks...");
@@ -388,49 +367,72 @@ async function main() {
   }
   console.log(`✅ Created ${dummyMembers.length} members`);
 
-  // Seed Dummy Assessments
+  // Seed Dummy Assessments (Peer-to-Peer)
   console.log("⭐ Creating dummy assessments...");
-  const dummyAssessors = [
-    { id: "user_1", name: "Ahmad Rizki" },
-    { id: "user_2", name: "Siti Nurhaliza" },
-    { id: "user_3", name: "Budi Santoso" },
-    { id: "user_4", name: "Dewi Lestari" },
-    { id: "user_5", name: "Eko Prasetyo" },
-    { id: "user_6", name: "Fitri Amelia" },
-    { id: "user_7", name: "Gunawan Wijaya" },
-    { id: "user_8", name: "Hana Kartika" },
-    { id: "user_9", name: "Irfan Hakim" },
-    { id: "user_10", name: "Joko Widodo" },
-    { id: "user_11", name: "Kartika Sari" },
-    { id: "user_12", name: "Lukman Hakim" },
-    { id: "user_13", name: "Maya Puspita" },
-    { id: "user_14", name: "Nurul Hidayah" },
-    { id: "user_15", name: "Omar Abdullah" },
-  ];
+
+  // Get all active members for peer assessment
+  const activeMembers = dummyMembers.filter((m) => m.status === "ACTIVE");
 
   let assessmentCount = 0;
-  for (const division of createdDivisions) {
-    for (const assessor of dummyAssessors) {
-      const scores = {
-        kinerja: Math.floor(Math.random() * 2) + 4, // 4-5
-        kedisiplinan: Math.floor(Math.random() * 2) + 4,
-        komunikasi: Math.floor(Math.random() * 2) + 4,
-        inisiatif: Math.floor(Math.random() * 2) + 4,
-        kerjasama: Math.floor(Math.random() * 2) + 4,
-        spesifik1: Math.floor(Math.random() * 2) + 4,
-        spesifik2: Math.floor(Math.random() * 2) + 4,
-      };
+  // Setiap member menilai beberapa member lain (tidak semua untuk seed data)
+  for (let i = 0; i < Math.min(5, activeMembers.length); i++) {
+    const assessor = activeMembers[i];
 
-      const average = (scores.kinerja + scores.kedisiplinan + scores.komunikasi + scores.inisiatif + scores.kerjasama + scores.spesifik1 + scores.spesifik2) / 7;
+    // Assessor menilai 3-5 member lain (random)
+    const numAssessments = Math.floor(Math.random() * 3) + 3; // 3-5 assessments
+    const assessees = activeMembers
+      .filter((m) => m.userId !== assessor.userId) // Tidak menilai diri sendiri
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numAssessments);
+
+    for (const assessee of assessees) {
+      const assesseeDivision = assessee.divisionName ? createdDivisions.find((d) => d.name === assessee.divisionName) : null;
+
+      // Generate random scores 3-5 untuk Hard Skills
+      const hardSkills = Array.from({ length: 7 }, () => Math.floor(Math.random() * 3) + 3);
+
+      // Generate random scores 3-5 untuk Soft Skills
+      const softSkills = Array.from({ length: 12 }, () => Math.floor(Math.random() * 3) + 3);
+
+      const averageHardSkill = hardSkills.reduce((a, b) => a + b, 0) / 7;
+      const averageSoftSkill = softSkills.reduce((a, b) => a + b, 0) / 12;
+      const averageTotal = (averageHardSkill + averageSoftSkill) / 2;
 
       await prisma.assessment.create({
         data: {
           periodId: period.id,
-          divisionId: division.id,
-          assessorId: assessor.id,
+          assessorId: assessor.userId,
           assessorName: assessor.name,
-          ...scores,
-          average,
+          assesseeId: assessee.userId,
+          assesseeName: assessee.name,
+          assesseeDivisionId: assesseeDivision?.id || createdDivisions[0].id,
+
+          // Hard Skills
+          hardSkill1: hardSkills[0],
+          hardSkill2: hardSkills[1],
+          hardSkill3: hardSkills[2],
+          hardSkill4: hardSkills[3],
+          hardSkill5: hardSkills[4],
+          hardSkill6: hardSkills[5],
+          hardSkill7: hardSkills[6],
+
+          // Soft Skills
+          softSkill1: softSkills[0],
+          softSkill2: softSkills[1],
+          softSkill3: softSkills[2],
+          softSkill4: softSkills[3],
+          softSkill5: softSkills[4],
+          softSkill6: softSkills[5],
+          softSkill7: softSkills[6],
+          softSkill8: softSkills[7],
+          softSkill9: softSkills[8],
+          softSkill10: softSkills[9],
+          softSkill11: softSkills[10],
+          softSkill12: softSkills[11],
+
+          averageHardSkill,
+          averageSoftSkill,
+          averageTotal,
         },
       });
       assessmentCount++;

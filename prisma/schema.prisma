@@ -145,48 +145,52 @@ model AssessmentPeriod {
   @@index([startDate, endDate])
 }
 
-// Model untuk Penilaian
+// Model untuk Penilaian (Peer-to-Peer Assessment)
 model Assessment {
   id              String   @id @default(uuid())
   periodId        String
-  divisionId      String
-  assessorId      String   // User ID dari Clerk
-  assessorName    String
+  assessorId      String   // User ID yang menilai
+  assessorName    String   // Nama penilai
+  assesseeId      String   // User ID yang dinilai
+  assesseeName    String   // Nama yang dinilai
+  assesseeDivisionId String // Divisi yang dinilai (untuk filter)
   
-  // Pertanyaan Umum (skala 1-5)
-  kinerja         Int
-  kedisiplinan    Int
-  komunikasi      Int
-  inisiatif       Int
-  kerjasama       Int
+  // Hard Skills (skala 1-5)
+  hardSkill1      Int      // Keterampilan Teknis
+  hardSkill2      Int      // Keterampilan Kuantitatif dan Analitis
+  hardSkill3      Int      // Literasi Digital dan Teknologi
+  hardSkill4      Int      // Keterampilan Bahasa dan Komunikasi Teknis
+  hardSkill5      Int      // Manajemen dan Operasional
+  hardSkill6      Int      // Keterampilan Riset dan Inovasi
+  hardSkill7      Int      // Keterampilan Spesifik Industri
   
-  // Pertanyaan Spesifik (skala 1-5)
-  spesifik1       Int
-  spesifik2       Int
+  // Soft Skills (skala 1-5)
+  softSkill1      Int      // Kepemimpinan
+  softSkill2      Int      // Kemampuan Bekerja dalam tim
+  softSkill3      Int      // Kepedulian sosial
+  softSkill4      Int      // Kemampuan Berpikir Kreatif
+  softSkill5      Int      // Kemampuan Problem Solving
+  softSkill6      Int      // Kemampuan Berkomunikasi
+  softSkill7      Int      // Kemampuan Berkolaborasi
+  softSkill8      Int      // Kemampuan Literasi Teknologi Informasi
+  softSkill9      Int      // Tingkat Penguasaan Isi Program
+  softSkill10     Int      // Berpikir Analitis
+  softSkill11     Int      // Kegigihan
+  softSkill12     Int      // Tanggung Jawab
   
   // Metadata
-  average         Float
+  averageHardSkill Float   // Rata-rata Hard Skills
+  averageSoftSkill Float   // Rata-rata Soft Skills
+  averageTotal     Float   // Rata-rata keseluruhan
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   period          AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
-  division        Division         @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  assesseeDivision Division        @relation(fields: [assesseeDivisionId], references: [id], onDelete: Cascade)
 
-  @@unique([periodId, divisionId, assessorId])
+  @@unique([periodId, assessorId, assesseeId]) // Satu orang hanya bisa nilai satu orang sekali per periode
   @@index([periodId])
-  @@index([divisionId])
   @@index([assessorId])
-}
-
-// Model untuk Pertanyaan Spesifik per Divisi
-model DivisionQuestion {
-  id          String   @id @default(uuid())
-  divisionName String
-  questionNumber Int    // 1 or 2
-  questionText String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([divisionName, questionNumber])
-  @@index([divisionName])
+  @@index([assesseeId])
+  @@index([assesseeDivisionId])
 }
