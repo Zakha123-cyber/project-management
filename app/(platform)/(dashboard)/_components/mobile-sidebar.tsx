@@ -32,16 +32,16 @@ export const MobileSidebar = () => {
         <>
             <Button
                 onClick={onOpen}
-                className="block md:hidden mr-2"
+                className="block md:hidden mr-2 hover:bg-neutral-100"
                 variant="ghost"
                 size="sm"
             >
-                <Menu className="h-4 w-4"/>
+                <Menu className="h-5 w-5 text-neutral-700"/>
             </Button>
             <Sheet open={isOpen} onOpenChange={onClose}>
                 <SheetContent
                     side="left"
-                    className="p-2 pt-10"
+                    className="p-2 pt-10 w-72"
                 >
                     <Sidebar
                         storageKey="t-sidebar-mobile-state"

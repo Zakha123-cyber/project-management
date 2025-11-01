@@ -70,8 +70,8 @@ export const Sidebar = ({
 
     return (
         <>
-            <div className="font-medium text-xs flex items-center mb-1">
-                <span className="pl-4">   
+            <div className="font-semibold text-xs flex items-center mb-3 text-neutral-600">
+                <span className="pl-4 uppercase tracking-wider">   
                     Workspaces
                 </span>
                 <Button
@@ -79,7 +79,7 @@ export const Sidebar = ({
                     type="button"
                     size="icon"
                     variant="ghost"
-                    className="ml-auto"
+                    className="ml-auto hover:bg-neutral-100"
                 >
                     <Link href="/select-org">
                         <Plus
