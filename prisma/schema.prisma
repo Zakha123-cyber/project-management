@@ -76,17 +76,57 @@ model Task {
   id          String   @id @default(uuid())
   divisionId  String
   title       String
+  description String?  // Deskripsi detail task
   deadline    DateTime
-  status      String   // not-started, in-progress, completed, overdue
-  priority    String   // high, medium, low
+  status      TaskStatus @default(NOT_STARTED)
+  priority    TaskPriority @default(MEDIUM)
+  progress    Int      @default(0) // Progress 0-100%
+  assignedTo  String?  // userId dari member yang ditugaskan
+  assignedToName String? // Nama member (untuk display)
+  createdBy   String   // userId yang membuat task
+  createdByName String // Nama pembuat (untuk display)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   division    Division @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  notes       TaskNote[]
 
   @@index([divisionId])
   @@index([status])
   @@index([deadline])
+  @@index([assignedTo])
+  @@index([createdBy])
+}
+
+// Model untuk Notes pada Task
+model TaskNote {
+  id          String   @id @default(uuid())
+  taskId      String
+  content     String   @db.Text
+  authorId    String   // userId yang menulis note
+  authorName  String   // Nama author (untuk display)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  task        Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
+}
+
+// Enum untuk Status Task
+enum TaskStatus {
+  NOT_STARTED   // Belum dimulai
+  IN_PROGRESS   // Sedang dikerjakan
+  COMPLETED     // Selesai
+  OVERDUE       // Terlambat
+}
+
+// Enum untuk Priority Task
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 // Model untuk Periode Penilaian

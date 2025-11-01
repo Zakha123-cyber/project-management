@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Activity, CreditCard, Layout, Settings, ClipboardCheck, Users } from "lucide-react";
+import { Activity, CreditCard, Layout, Settings, ClipboardCheck, Users, ListTodo } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -32,6 +32,11 @@ export const NavItem = ({ isExpanded, isActive, organization, onExpand }: NavIte
       label: "Boards",
       icon: <Layout className="h-4 w-4 mr-2" />,
       href: `/organization/${organization.id}`,
+    },
+    {
+      label: "Jobdesk",
+      icon: <ListTodo className="h-4 w-4 mr-2" />,
+      href: `/organization/${organization.id}/tasks`,
     },
     {
       label: "Anggota",
