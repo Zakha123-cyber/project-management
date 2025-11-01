@@ -9,13 +9,144 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model Board {
   id String @id @default(uuid())
-
   title String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model untuk Divisi
+model Division {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  color       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+  assessments Assessment[]
+  members     Member[]
+
+  @@index([name])
+}
+
+// Model untuk Member/Anggota
+model Member {
+  id          String   @id @default(uuid())
+  userId      String   @unique  // Clerk User ID
+  email       String   @unique
+  name        String
+  imageUrl    String?
+  divisionId  String?
+  role        MemberRole @default(STAFF)
+  status      MemberStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  division    Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@index([divisionId])
+  @@index([role])
+  @@index([status])
+}
+
+enum MemberRole {
+  ADMIN         // Ketua Pelaksana - Full access
+  COORDINATOR   // CO Divisi - Manage 1 divisi
+  STAFF         // Anggota - View all, edit own division
+}
+
+enum MemberStatus {
+  PENDING       // Baru join, belum di-assign role/divisi
+  ACTIVE        // Sudah aktif
+  INACTIVE      // Non-aktif
+}
+
+// Model untuk Task/Tugas Divisi
+model Task {
+  id          String   @id @default(uuid())
+  divisionId  String
+  title       String
+  deadline    DateTime
+  status      String   // not-started, in-progress, completed, overdue
+  priority    String   // high, medium, low
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  division    Division @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+
+  @@index([divisionId])
+  @@index([status])
+  @@index([deadline])
+}
+
+// Model untuk Periode Penilaian
+model AssessmentPeriod {
+  id          String   @id @default(uuid())
+  name        String   // "Oktober 2025", "November 2025", etc
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assessments Assessment[]
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+}
+
+// Model untuk Penilaian
+model Assessment {
+  id              String   @id @default(uuid())
+  periodId        String
+  divisionId      String
+  assessorId      String   // User ID dari Clerk
+  assessorName    String
+  
+  // Pertanyaan Umum (skala 1-5)
+  kinerja         Int
+  kedisiplinan    Int
+  komunikasi      Int
+  inisiatif       Int
+  kerjasama       Int
+  
+  // Pertanyaan Spesifik (skala 1-5)
+  spesifik1       Int
+  spesifik2       Int
+  
+  // Metadata
+  average         Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  period          AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  division        Division         @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, divisionId, assessorId])
+  @@index([periodId])
+  @@index([divisionId])
+  @@index([assessorId])
+}
+
+// Model untuk Pertanyaan Spesifik per Divisi
+model DivisionQuestion {
+  id          String   @id @default(uuid())
+  divisionName String
+  questionNumber Int    // 1 or 2
+  questionText String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([divisionName, questionNumber])
+  @@index([divisionName])
 }

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Webhook</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .step {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔧 Webhook Debugging Tool</h1>
+        <p style="color: #666;">Test apakah webhook endpoint dapat diakses dari ngrok</p>
+
+        <div class="step">
+            <strong>Step 1:</strong> Pastikan Next.js running di <code>http://localhost:3000</code>
+        </div>
+
+        <div class="step">
+            <strong>Step 2:</strong> Pastikan ngrok running: <code>ngrok http 3000</code>
+        </div>
+
+        <div class="step">
+            <strong>Step 3:</strong> Masukkan ngrok URL Anda di bawah
+        </div>
+
+        <label>Ngrok URL (tanpa trailing slash):</label>
+        <input type="text" id="ngrokUrl" placeholder="https://xxx-xxx.ngrok-free.dev" value="">
+
+        <button onclick="testEndpoint()">Test Endpoint</button>
+        <button onclick="checkClerkSetup()">Check Clerk Setup</button>
+
+        <div id="result"></div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #fff9c4; border-radius: 4px;">
+            <strong>💡 Troubleshooting Checklist:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>✅ Next.js running di port 3000</li>
+                <li>✅ Ngrok running dengan <code>ngrok http 3000</code></li>
+                <li>✅ Webhook URL di Clerk: <code>https://your-ngrok.ngrok-free.dev/api/webhooks/clerk</code></li>
+                <li>✅ Events enabled: organizationMembership.created, deleted, user.updated</li>
+                <li>✅ CLERK_WEBHOOK_SECRET sudah ada di .env</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testEndpoint() {
+            const url = document.getElementById('ngrokUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!url) {
+                resultDiv.innerHTML = '<div class="status error">❌ Masukkan ngrok URL terlebih dahulu!</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="status info">⏳ Testing endpoint...</div>';
+
+            try {
+                const response = await fetch(url + '/api/webhooks/clerk', {
+                    method: 'GET',
+                });
+
+                const text = await response.text();
+
+                if (response.ok || response.status === 400 || response.status === 405) {
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Endpoint can be reached!<br>
+                            <small>Status: ${response.status} | Method: GET (expected 400/405 for GET request)</small>
+                        </div>
+                        <p><strong>Next step:</strong> Invite user via Clerk dan cek terminal Next.js untuk log webhook</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Endpoint returned: ${response.status}<br>
+                            <small>${text}</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Cannot reach endpoint!<br>
+                        <small>Error: ${error.message}</small>
+                    </div>
+                    <p><strong>Kemungkinan masalah:</strong></p>
+                    <ul>
+                        <li>Ngrok tidak running atau URL salah</li>
+                        <li>Next.js tidak running di port 3000</li>
+                        <li>Firewall memblokir koneksi</li>
+                    </ul>
+                `;
+            }
+        }
+
+        function checkClerkSetup() {
+            const url = document.getElementById('ngrokUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!url) {
+                resultDiv.innerHTML = '<div class="status error">❌ Masukkan ngrok URL terlebih dahulu!</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="status info">
+                    <strong>📋 Clerk Webhook Configuration</strong><br><br>
+                    1. Buka: <a href="https://dashboard.clerk.com" target="_blank">Clerk Dashboard</a><br>
+                    2. Pilih aplikasi Anda<br>
+                    3. Sidebar → Webhooks → Add Endpoint<br>
+                    4. Webhook URL:<br>
+                    <pre>${url}/api/webhooks/clerk</pre>
+                    5. Subscribe to events:<br>
+                    <pre>✓ organizationMembership.created
+✓ organizationMembership.deleted
+✓ user.updated</pre>
+                    6. Copy Signing Secret → Paste ke .env sebagai CLERK_WEBHOOK_SECRET<br>
+                    7. Restart Next.js setelah update .env
+                </div>
+            `;
+        }
+
+        // Auto-fill dari localStorage
+        window.onload = () => {
+            const saved = localStorage.getItem('ngrokUrl');
+            if (saved) {
+                document.getElementById('ngrokUrl').value = saved;
+            }
+
+            document.getElementById('ngrokUrl').addEventListener('change', (e) => {
+                localStorage.setItem('ngrokUrl', e.target.value);
+            });
+        };
+    </script>
+</body>
+
+</html>

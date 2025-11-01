@@ -2,7 +2,7 @@ import { authMiddleware, redirectToSignIn } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export default authMiddleware({
-  publicRoutes: ["/"],
+  publicRoutes: ["/", "/api/webhooks/clerk", "/api/test-member"],
   afterAuth(auth, req) {
     let path = "/select-org";
 
@@ -23,17 +23,16 @@ export default authMiddleware({
     if (auth.userId && !auth.orgId && req.nextUrl.pathname !== "/select-org") {
       return NextResponse.redirect(new URL("/select-org", req.url));
     }
-  }
+  },
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!.+\\.[\\w]+$|_next).*)",
+    // Always run for root
+    "/",
     // Always run for API routes
-    '/(api|trpc)(.*)',
-    // Add a catch-all route matcher, except settings routes
-    '/organization/:orgId((?!/settings).*)',
+    "/(api|trpc)(.*)",
   ],
 };
-
