@@ -29,6 +29,27 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const { periodId } = params;
 
+    // Get current period information
+    const currentPeriod = await db.assessmentPeriod.findUnique({
+      where: { id: periodId },
+    });
+
+    if (!currentPeriod) {
+      return new NextResponse("Period not found", { status: 404 });
+    }
+
+    // Get previous period (by startDate)
+    const previousPeriod = await db.assessmentPeriod.findFirst({
+      where: {
+        startDate: {
+          lt: currentPeriod.startDate,
+        },
+      },
+      orderBy: {
+        startDate: "desc",
+      },
+    });
+
     // Get all assessments for this period
     const assessments = await db.assessment.findMany({
       where: {
@@ -39,6 +60,16 @@ export async function GET(request: Request, { params }: RouteParams) {
       },
     });
 
+    // Get assessments from previous period if exists
+    let previousAssessments: any[] = [];
+    if (previousPeriod) {
+      previousAssessments = await db.assessment.findMany({
+        where: {
+          periodId: previousPeriod.id,
+        },
+      });
+    }
+
     // Group assessments by assessee (yang dinilai)
     const assessmentsByAssessee = assessments.reduce((acc: any, assessment) => {
       if (!acc[assessment.assesseeId]) {
@@ -46,6 +77,17 @@ export async function GET(request: Request, { params }: RouteParams) {
           userId: assessment.assesseeId,
           name: assessment.assesseeName,
           division: assessment.assesseeDivision,
+          assessments: [],
+        };
+      }
+      acc[assessment.assesseeId].assessments.push(assessment);
+      return acc;
+    }, {});
+
+    // Group previous assessments by assessee
+    const previousAssessmentsByAssessee = previousAssessments.reduce((acc: any, assessment) => {
+      if (!acc[assessment.assesseeId]) {
+        acc[assessment.assesseeId] = {
           assessments: [],
         };
       }
@@ -97,6 +139,21 @@ export async function GET(request: Request, { params }: RouteParams) {
         });
       }
 
+      // Calculate previous period score if exists
+      let previousPeriodScore = undefined;
+      let scoreDifference = undefined;
+      
+      if (previousAssessmentsByAssessee[member.userId]) {
+        const prevAssessments = previousAssessmentsByAssessee[member.userId].assessments;
+        const prevCount = prevAssessments.length;
+        
+        if (prevCount > 0) {
+          const prevTotal = prevAssessments.reduce((sum: number, a: any) => sum + a.averageTotal, 0);
+          previousPeriodScore = prevTotal / prevCount;
+          scoreDifference = (totalOverall / count) - previousPeriodScore;
+        }
+      }
+
       return {
         userId: member.userId,
         name: member.name,
@@ -107,6 +164,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         averageTotal: totalOverall / count,
         hardSkillsDetail,
         softSkillsDetail,
+        previousPeriodScore,
+        scoreDifference,
       };
     });
 
@@ -121,17 +180,25 @@ export async function GET(request: Request, { params }: RouteParams) {
     });
 
     // Calculate statistics
+    const totalImprovements = results.filter((r: any) => r.scoreDifference !== undefined);
+    const averageImprovement = totalImprovements.length > 0 
+      ? totalImprovements.reduce((sum: number, r: any) => sum + (r.scoreDifference || 0), 0) / totalImprovements.length 
+      : 0;
+
     const stats = {
       totalMembers: results.length,
       totalAssessments: assessments.length,
       averageScore: results.length > 0 ? results.reduce((sum: number, r: any) => sum + r.averageTotal, 0) / results.length : 0,
       highestScore: results.length > 0 ? Math.max(...results.map((r: any) => r.averageTotal)) : 0,
+      averageImprovement,
     };
 
     return NextResponse.json({
       results,
       divisions,
       stats,
+      currentPeriod,
+      previousPeriod,
     });
   } catch (error) {
     console.error("[ASSESSMENT_RESULTS_GET]", error);

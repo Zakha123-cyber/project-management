@@ -14,7 +14,7 @@ export async function GET() {
     // Get all assessment periods, ordered by most recent
     const periods = await db.assessmentPeriod.findMany({
       orderBy: {
-        createdAt: "desc",
+        startDate: "desc",
       },
       include: {
         _count: {
@@ -25,7 +25,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(periods);
+    return NextResponse.json({ periods });
   } catch (error) {
     console.error("[PERIODS_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
